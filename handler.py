@@ -79,7 +79,10 @@ def run_gnina(job_input):
     exhaustiveness = job_input.get("exhaustiveness", 8)
     num_modes = job_input.get("num_modes", 9)
     cnn_scoring = job_input.get("cnn_scoring", "rescore")
-    
+    num_cpu = job_input.get("num_cpu", 0)
+    if num_cpu <= 0:
+        num_cpu = os.cpu_count() or 4
+
     with tempfile.TemporaryDirectory() as tmpdir:
         receptor_path = os.path.join(tmpdir, "receptor.pdb")
         ligand_path = os.path.join(tmpdir, "ligands.sdf")
@@ -108,6 +111,7 @@ def run_gnina(job_input):
             "--num_modes", str(num_modes),
             "--cnn_scoring", cnn_scoring,
             "--cnn", "crossdock_default2018",
+            "--cpu", str(num_cpu),
         ]
         
         # Run GNINA
@@ -162,7 +166,8 @@ def run_gnina(job_input):
                 "n_molecules": len(molecules),
                 "elapsed_seconds": round(elapsed, 2),
                 "gnina_stdout": stdout[-500:] if stdout else "",
-                "gpu_used": True
+                "gpu_used": True,
+                "num_cpu_used": num_cpu
             }
             
         except subprocess.TimeoutExpired:
